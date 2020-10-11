@@ -13,8 +13,11 @@ Our depth images are saved in `.exr` files, please install the [OpenEXR](https:/
 - ``mkdir build && cd build``
 - ``cmake .. && make``
 
-## Dataset & Simulation environment
-Our dataset and simulation environment will be available soon.
+## Dataset
+Our dataset is available at [Google Driver](https://drive.google.com/file/d/1hZmQhuTrKRn8BMyAq-bI13rQSrdGQdJH/view?usp=sharing) 
+
+## Simulation Environment
+Simulation environment will be available soon.
 
 <!-- ## Simulation environment
 The simulation environment will be available soon. --> 
@@ -42,4 +45,4 @@ You use the following script to abtain the success rate and coverage rate.
 ````
 
 ## Acknowledgement
-The codes of pointnet2 are borrowed from [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch).
+The code of pointnet2 are borrowed from [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch).
