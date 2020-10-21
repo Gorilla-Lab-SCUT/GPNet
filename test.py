@@ -121,6 +121,7 @@ def main():
             data_index = torch.arange(contact_index_.size(1)).long().cuda()
 
             radius = grid_len / grid_num * np.sqrt(3)
+            # pairs_all_, local_points_ = getTestProposals(pc1, grids1, contact_index1)
             pairs_all_, local_points_ = getTestProposalsV3(pc1, grids1, contact_index1, grid_th=opt.grid_th)
             print(pairs_all_.size())
 

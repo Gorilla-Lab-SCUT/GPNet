@@ -1,0 +1,17 @@
+
+<?xml version="1.0"?>
+<robot name="20b7adb178ea2c71d8892a9c05c4aa0e">
+	<link name="base">
+		<collision>
+			<geometry>
+				<mesh filename="../processed/20b7adb178ea2c71d8892a9c05c4aa0e.obj"/>
+			</geometry>
+			<origin xyz="0 0 0"/>
+		</collision>
+		<inertial>
+			<mass value="0.0004787628016249627"/>
+			<inertia ixx = "0.001" ixy = "0" ixz = "0"  iyy = "0.001" iyz = "0" izz = "0.001" />
+			<origin xyz="-0.000856155618137306 -0.004989331460370229 0.027960703640760712"/>
+		</inertial>
+	</link>
+</robot>
