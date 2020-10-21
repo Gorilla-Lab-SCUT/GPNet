@@ -18,8 +18,15 @@ Our dataset is available at [Google Driver](https://drive.google.com/file/d/1hZm
 [Backup](https://pan.baidu.com/s/1Gf0cIgaL1s30n22z7sOuRA) (2qln).
 
 ## Simulation Environment
-The simulation environment is built on [PyBullet](https://pybullet.org/wordpress/). You can use `pip` to install the python package: `pip install pybullet`.
-You can look for the details of our simulation configurations in the directory `simulator`.
+The simulation environment is built on [PyBullet](https://pybullet.org/wordpress/). You can use `pip` to install the python packages: 
+````
+pip install pybullet
+pip install attrdict
+pip install collections
+pip install joblib
+pip install gc
+````
+Please look for the details of our simulation configurations in the directory `simulator`.
 
 <!-- ## Simulation environment
 The simulation environment will be available soon. --> 
