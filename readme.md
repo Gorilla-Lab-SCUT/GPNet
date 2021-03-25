@@ -32,11 +32,12 @@ Please look for the details of our simulation configurations in the directory `s
 The simulation environment will be available soon. --> 
 
 ## Training
-``CUDA_VISIBLE_DEVICES=0,1 python train --tanh --grid --dataset_root path_to_dataset``
+``CUDA_VISIBLE_DEVICES=0,1 python train.py --tanh --grid --dataset_root path_to_dataset``
 
 ## Test
+The Pretrained model is [here](https://drive.google.com/file/d/1Z8xUQmrzufVz7q-3hs9ZVVjjFCTPnxxB/view?usp=sharing).
 ````
-CUDA_VISIBLE_DEVICES=0,1 python test --tanh --grid --dataset_root path_to_dataset --resume pretrained_model/checkpoint_440.pth.tar
+CUDA_VISIBLE_DEVICES=0,1 python test.py --tanh --grid --dataset_root path_to_dataset --resume pretrained_model/checkpoint_440.pth.tar
 ````
 
 Then it will generate the predicted grasps saved in `.npz` files in `pretrained_model/test/epoch440/view0`. The file `pretrained_model/test/epoch440/nms_poses_view0.txt` contains the predicted grasps after nms.
