@@ -15,10 +15,8 @@ Our depth images are saved in `.exr` files, please install the [OpenEXR](https:/
 
 ## Dataset
 Our dataset is available at [Google Driver](https://drive.google.com/file/d/1hZmQhuTrKRn8BMyAq-bI13rQSrdGQdJH/view?usp=sharing). [Backup](https://pan.baidu.com/s/1Gf0cIgaL1s30n22z7sOuRA) (2qln).  
-$\color{red}{Warning!!!}$  
-<div>
-<font color=FF0000> The contact points in our released dataset are not correct, please run the following script to get the correct contact points.</font>  
-</div>
+🔔$\color{red}{Warning!!!}$  
+🔔<font color=FF0000> The contact points in our released dataset are not correct, please run the following script to get the correct contact points.</font>  
 ``python get_contact_cos.py``
 
 
