@@ -1,5 +1,5 @@
 # Grasp Proposal Networks: An End-to-End Solution for Visual Learning of Robotic Grasps 
-Pytorch implementation of [GPNet](https://arxiv.org/abs/2009.12606).
+Pytorch implementation of [GPNet](https://arxiv.org/abs/2009.12606). [Project Page](http://wuchaozheng.com.cn/gpnet/).
 
 ## Environment
 - Ubuntu 16.04
