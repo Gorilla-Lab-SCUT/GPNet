@@ -11,7 +11,9 @@ def read_grasps(root, shape):
     return centers, quaternions, widths
 
 
-def save_contact_angle(contacts, cos_angle, root, shape):
+def save_contact_angle(centers, contacts, cos_angle, root, shape):
+    cen_file = os.path.join(root, shape+'_c.npy')
+    np.save(cen_file, centers)
     con_file = os.path.join(root, shape+'_contact.npy')
     np.save(con_file, contacts)
     cos_file = os.path.join(root, shape+'_cos.npy')
@@ -91,7 +93,7 @@ if __name__ == '__main__':
         cos_angles = np.array(cos_angles)
         assert contacts.shape[0] == centers.shape[0]
         assert cos_angles.shape[0] == centers.shape[0]
-        save_contact_angle(contacts, cos_angles, data_root, s)
+        save_contact_angle(centers, contacts, cos_angles, data_root, s)
         print('time: ', time.time()-st)
 
 

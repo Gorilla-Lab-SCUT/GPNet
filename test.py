@@ -22,6 +22,7 @@ from tools.transformTool import matrix2quaternion2
 from lib.gpnet import GraspPoseNet
 from loss import angle_loss
 from tools.nms import nms, nms2
+from get_contact_cos import zMove
 
 
 parser = argparse.ArgumentParser()
@@ -173,6 +174,7 @@ def main():
             assert pred_angle_cpu.shape[0] == centers.shape[0]
             assert posi_contacts_cpu.shape[0] == centers.shape[0]
             print('posi grasp num:', posi_scores.size(0))
+            centers = zMove(quaternions, centers, zMoveLength=0.015)
 
             all_grasps_path = os.path.join(all_grasps_dir, shape+'.npz')
             np.savez(all_grasps_path, widths=widths, centers=centers, quaternions=quaternions, 
