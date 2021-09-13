@@ -127,7 +127,7 @@ def main():
     st_time = time.time()
 
     for epoch in range(start_epoch, opt.nepoch+1):
-        lr = adjust_learning_rate(optimizer, epoch, opt.lr)
+        # lr = adjust_learning_rate(optimizer, epoch, opt.lr)
         net.train()
         loss_sum = 0
         prop_loss_sum = 0
