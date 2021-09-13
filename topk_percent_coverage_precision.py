@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--GPU', dest='GPUid',
                     help='set GPU id', default=0, type=str)
 parser.add_argument('-pd', '--pred_data', type=str, default=None, help='data root dir')
-parser.add_argument('-gd', '--gt_data', type=str, default=None, help='data root dir')
+parser.add_argument('-gd', '--gt_data', type=str, default='/data/wuchaozheng/dataset/shapenetSemGrasp/nips2020/new_9cls/', help='data root dir')
 parser.add_argument('--top10', dest='top10', default=False, help='whether use top10', action='store_true')
 
 

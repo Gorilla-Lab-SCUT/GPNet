@@ -26,9 +26,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_root', type=str, default='/data/wuchaozheng/dataset/shapenetSemGrasp/nips2020/new_9cls/', help='dataset root dir')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size')
 parser.add_argument('--workers', type=int, default=8, help='number of data loading workers')
-parser.add_argument('--optimizer', default='sgd', type=str, help='training optimizer')
+parser.add_argument('--optimizer', default='adam', type=str, help='training optimizer')
 parser.add_argument('--momentum', default=0.9, type=float, help='momentum in sgd')
-parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+parser.add_argument('--lr', default=0.0001, type=float, help='learning rate')
 parser.add_argument('--wd', default=0.0001, type=float, metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--nepoch', type=int, default=500, help='max number of epochs to train')
 parser.add_argument('--resume', type=str, default=None,  help='resume GPNet model')
@@ -48,8 +48,10 @@ opt = parser.parse_args()
 def main():
     # opt.manualSeed = random.randint(1, 10000)
     opt.manualSeed = 1
-    random.seed(opt.manualSeed)
+    # random.seed(opt.manualSeed)
     torch.manual_seed(opt.manualSeed)
+    torch.cuda.manual_seed(opt.manualSeed)
+    np.random.seed(opt.manualSeed)
 
     if opt.tanh:
         opt.logdir = opt.logdir + '_tanh'
@@ -171,6 +173,7 @@ def main():
             data_index = torch.arange(contact_index_.size(1)).long().cuda()
 
             radius = grid_len / grid_num * np.sqrt(3)
+            print('start proposal')
             pairs_all_, scores_all_, offsets_all_, local_points_, data_index_, prop_label_, posi_prop_idx_, \
             nega_prop_idx_, posi_idx_, nega_idx_ = getProposals(pc1, grids1, center1, contact_index1, \
                                                                 scores1, data_index, radius=radius)
@@ -314,12 +317,13 @@ def main():
 
         best_loss = 1000.0
         is_best = False
-        checkpoint_dict = {'epoch': epoch, 
-                        'state_dict': net.state_dict(), 
-                        'best_loss': best_loss, 
-                        'lr': lr,
-                        'optimizer': optimizer.state_dict()}
-        save_checkpoint(checkpoint_dict, is_best, outputdir, epoch)
+        if epoch % 5 == 0:
+            checkpoint_dict = {'epoch': epoch, 
+                            'state_dict': net.state_dict(), 
+                            'best_loss': best_loss, 
+                            'lr': lr,
+                            'optimizer': optimizer.state_dict()}
+            save_checkpoint(checkpoint_dict, is_best, outputdir, epoch)
 
 
 

@@ -243,11 +243,11 @@ class GraspData(data.Dataset):
 
     def read_grasps(self, shape):
         if self.split != 'test':
-            centers = np.load(os.path.join(self.annoRoot, 'candidate', shape+'_c.npy'))
+            centers = np.load(os.path.join(self.annoRoot, 'candidate_contact_v2', shape+'_c.npy'))
             quaternions = np.load(os.path.join(self.annoRoot, 'candidate', shape+'_q.npy'))
             widths = np.load(os.path.join(self.annoRoot, 'candidate', shape+'_d.npy'))
-            contacts = np.load(os.path.join(self.annoRoot, 'candidate', shape+'_contact.npy'))
-            angles = np.load(os.path.join(self.annoRoot, 'candidate', shape+'_cos.npy'))
+            contacts = np.load(os.path.join(self.annoRoot, 'candidate_contact_v2', shape+'_contact.npy'))
+            angles = np.load(os.path.join(self.annoRoot, 'candidate_contact_v2', shape+'_cos.npy'))
             labels = np.load(os.path.join(self.annoRoot, 'simulateResult', shape+'.npy'))
             qualities = np.zeros(centers.shape[0])
             assert labels.shape[0] == centers.shape[0]
@@ -264,7 +264,7 @@ class GraspData(data.Dataset):
 
             posi_num = posi_idx.shape[0]
             nega_num = nega_idx.shape[0]
-            sample_num = 10000
+            sample_num = 5000
             half_num = sample_num // 2
             if posi_num > half_num:
                 posi_idx = np.random.choice(posi_idx, half_num, replace=False)

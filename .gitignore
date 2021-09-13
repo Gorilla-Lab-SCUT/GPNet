@@ -1,0 +1,11 @@
+#.gitignore
+*.so
+*.zip
+**/*.pyc
+pretrained_model/
+lib/pointnet2/build
+log*/
+*__pycache__/
+simulator/
+.vscode/
+*.pth.tar

@@ -44,6 +44,7 @@ parser.add_argument('--grid_num', type=int, default=10, help='number of grids')
 parser.add_argument('--save_all', dest='save_all', default=False, help='whether save all prediction', action='store_true')
 parser.add_argument('--view', type=int, default=0, help='view id for testing.')
 parser.add_argument('--grid_th', type=float, default=0.075, help='proposal grid number id for testing.')
+parser.add_argument('--epoch', type=str, default=None,  help='resume epochs')
 opt = parser.parse_args()
 
 
@@ -65,142 +66,152 @@ def main():
 
     net = GraspPoseNet(tanh=opt.tanh, grid=opt.grid, training=False, bn=False, use_angle=True).cuda()
 
-    if os.path.isfile(opt.resume):
-            print("=> loading checkpoint '{}'".format(opt.resume))
-            checkpoint = torch.load(opt.resume)
-            pretrained_dict = checkpoint['state_dict']
-            net.load_state_dict(pretrained_dict)
-            # lr = checkpoint['lr']
-            epoch = checkpoint['epoch']
-            print("\n=> loaded checkpoint '{}' (epoch {})" .format(opt.resume, checkpoint['epoch']))
-            del checkpoint
-    else:
-        assert False, 'WRONG RESUME PATH!'
+    epochs = [int(s) for s in opt.epoch.split(',')]
 
-    all_grasps_dir = os.path.join(outputdir, 'epoch%d'%epoch)
+    for e in epochs:
+        resume_path = os.path.join(opt.resume, 'checkpoint_%d.pth.tar'%e)
 
-    if opt.save_all:
-        all_grasps_dir = all_grasps_dir + '_all'
+        if os.path.isfile(resume_path):
+                print("=> loading checkpoint '{}'".format(resume_path))
+                checkpoint = torch.load(resume_path)
+                pretrained_dict = checkpoint['state_dict']
+                net.load_state_dict(pretrained_dict)
+                # lr = checkpoint['lr']
+                epoch = checkpoint['epoch']
+                print("\n=> loaded checkpoint '{}' (epoch {})" .format(resume_path, checkpoint['epoch']))
+                del checkpoint
+        else:
+            assert False, 'WRONG RESUME PATH!'
 
-    outputdir = all_grasps_dir
+        if 'epoch' in outputdir.split('/')[-1]:
+            outputdir = os.path.dirname(outputdir)
+        all_grasps_dir = os.path.join(outputdir, 'epoch%d'%epoch)
 
-    all_grasps_dir = os.path.join(all_grasps_dir, 'view%d'%(opt.view))
+        if opt.save_all:
+            all_grasps_dir = all_grasps_dir + '_all'
 
-    if not os.path.exists(all_grasps_dir):
-        os.makedirs(all_grasps_dir)
+        outputdir = all_grasps_dir
 
-    log = open(os.path.join(outputdir, 'log.txt'), 'a')
-    log.write('view%d\n'%(opt.view))
+        all_grasps_dir = os.path.join(all_grasps_dir, 'view%d'%(opt.view))
 
-    log_all = open(os.path.join(outputdir, 'nms_poses_view%s.txt'%(opt.view)), 'w')
+        if not os.path.exists(all_grasps_dir):
+            os.makedirs(all_grasps_dir)
 
-    lr = opt.lr
+        log = open(os.path.join(outputdir, 'log.txt'), 'a')
+        log.write('view%d\n'%(opt.view))
 
-    score_criterion = nn.BCELoss().cuda()
-    reg_criterion = nn.MSELoss(reduce=False).cuda()
+        log_all = open(os.path.join(outputdir, 'nms_poses_view%s.txt'%(opt.view)), 'w')
 
-    best_grasp_acc = -1.0
-    best_grasp_epoch = -1
+        lr = opt.lr
 
-    st_time = time.time()
+        score_criterion = nn.BCELoss().cuda()
+        reg_criterion = nn.MSELoss(reduce=False).cuda()
 
-    net.eval()
-    time_list = []
-    with torch.no_grad():
+        best_grasp_acc = -1.0
+        best_grasp_epoch = -1
 
-        for i, data in enumerate(dataLoader):
-            st = time.time()
-            pc_, grids_, contact_index_, shape = data
-            shape = shape[0]
-            print(shape, i)
-            print(grids_.size(), contact_index_.size(), pc_.size())
+        st_time = time.time()
 
-            pc1, grids1, contact_index1 = pc_.float().cuda(1), grids_.float().cuda(1), contact_index_.long().cuda(1)
+        net.eval()
+        time_list = []
+        
+        with torch.no_grad():
 
-            pc, grids, contact_index = pc_.float().cuda(0), grids_.float().cuda(0), contact_index_.long().cuda(0)
+            for i, data in enumerate(dataLoader):
+                st = time.time()
+                pc_, grids_, contact_index_, shape = data
+                shape = shape[0]
+                # print(shape, i)
+                print('\n<================================>', e, shape, i, '<================================>\n')
 
-            data_index = torch.arange(contact_index_.size(1)).long().cuda()
+                print(grids_.size(), contact_index_.size(), pc_.size())
 
-            radius = grid_len / grid_num * np.sqrt(3)
-            # pairs_all_, local_points_ = getTestProposals(pc1, grids1, contact_index1)
-            pairs_all_, local_points_ = getTestProposalsV3(pc1, grids1, contact_index1, grid_th=opt.grid_th)
-            print(pairs_all_.size())
+                pc1, grids1, contact_index1 = pc_.float().cuda(1), grids_.float().cuda(1), contact_index_.long().cuda(1)
 
-            del (pc1, grids1, contact_index1)
+                pc, grids, contact_index = pc_.float().cuda(0), grids_.float().cuda(0), contact_index_.long().cuda(0)
 
-            pairs_all, local_points = pairs_all_.cuda(0), local_points_.cuda(0)
+                data_index = torch.arange(contact_index_.size(1)).long().cuda()
 
-            del (pc_, grids_, contact_index_, local_points_, pairs_all_)
+                radius = grid_len / grid_num * np.sqrt(3)
+                # pairs_all_, local_points_ = getTestProposals(pc1, grids1, contact_index1)
+                pairs_all_, local_points_ = getTestProposalsV3(pc1, grids1, contact_index1, grid_th=opt.grid_th)
+                print(pairs_all_.size())
 
-            prop_score, pred_score, pred_offset, pred_angle, prop_posi_idx \
-             = net(pc, local_points, pairs_all, scale=radius)
+                del (pc1, grids1, contact_index1)
 
-            print('\nforward time: ', time.time() - st)
+                pairs_all, local_points = pairs_all_.cuda(0), local_points_.cuda(0)
 
-            print('pred_score: ', pred_score.max().item(), pred_score.min().item())
-            if opt.save_all:
-                posi_idx = torch.nonzero(pred_score.view(-1)>=0.).view(-1)
-            else:
-                posi_idx = torch.nonzero(pred_score.view(-1)>=0.5).view(-1)
-            if posi_idx.size(0) == 0:
-                continue
-            posi_scores = pred_score.view(-1)[posi_idx]
-            prop_score = prop_score.view(-1)[posi_idx]
-            prop_posi_idx = prop_posi_idx[posi_idx]
-            pred_offset = pred_offset[0, posi_idx]
-            pred_angle = pred_angle[0, posi_idx]
-            pred_pairs = pairs_all[0, prop_posi_idx]
+                del (pc_, grids_, contact_index_, local_points_, pairs_all_)
 
-            centers, widths, quaternions = get7dofPoses(pred_pairs, pred_offset, pred_angle, scale=radius)
-            time_list.append(time.time() - st)
-            z = centers[:, 2]
-            select = torch.nonzero((widths < 0.085)*(z>0)).view(-1)
-            if select.size(0) == 0:
-                continue
-            centers, widths, quaternions = centers[select], widths[select], quaternions[select]
-            select_pred_pairs = pred_pairs[select]
-            posi_scores = posi_scores[select]
-            prop_score = prop_score[select]
-            pred_angle = pred_angle[select].view(-1)
+                prop_score, pred_score, pred_offset, pred_angle, prop_posi_idx \
+                = net(pc, local_points, pairs_all, scale=radius)
 
-            posi_contacts = select_pred_pairs[:, 0]
-            posi_contacts_cpu = posi_contacts.cpu().numpy()
-            posi_scores_cpu = posi_scores.cpu().numpy()
-            centers = centers.cpu().numpy()
-            widths = widths.cpu().numpy()
-            quaternions = quaternions.cpu().numpy()
-            prop_score_cpu = prop_score.cpu().numpy()
-            pred_angle_cpu = pred_angle.cpu().numpy()
-            assert pred_angle_cpu.shape[0] == centers.shape[0]
-            assert posi_contacts_cpu.shape[0] == centers.shape[0]
-            print('posi grasp num:', posi_scores.size(0))
-            centers = zMove(quaternions, centers, zMoveLength=0.015)
+                print('\nforward time: ', time.time() - st)
 
-            all_grasps_path = os.path.join(all_grasps_dir, shape+'.npz')
-            np.savez(all_grasps_path, widths=widths, centers=centers, quaternions=quaternions, 
-                scores=posi_scores_cpu, contacts=posi_contacts_cpu, angles=pred_angle_cpu)
+                print('pred_score: ', pred_score.max().item(), pred_score.min().item())
+                if opt.save_all:
+                    posi_idx = torch.nonzero(pred_score.view(-1)>=0.).view(-1)
+                else:
+                    posi_idx = torch.nonzero(pred_score.view(-1)>=0.5).view(-1)
+                if posi_idx.size(0) == 0:
+                    continue
+                posi_scores = pred_score.view(-1)[posi_idx]
+                prop_score = prop_score.view(-1)[posi_idx]
+                prop_posi_idx = prop_posi_idx[posi_idx]
+                pred_offset = pred_offset[0, posi_idx]
+                pred_angle = pred_angle[0, posi_idx]
+                pred_pairs = pairs_all[0, prop_posi_idx]
 
-            st = time.time()
-            keep = nms2(centers, quaternions, posi_scores_cpu, cent_th=0.04, ang_th=np.pi/3)
-            keep = np.array(keep, dtype=np.int32)
-            print('nms time: ', time.time() - st)
-            centers = centers[keep]
-            widths = widths[keep]
-            quaternions = quaternions[keep]
-            
-            log_all.write(shape + '\n')
-            for i in range(centers.shape[0]):
-                w = widths[i]
-                c = centers[i]
-                q = quaternions[i]
-                log_all.write('%f,%f,%f,%f,%f,%f,%f\n'%(c[0], c[1], c[2], q[0], q[1], q[2], q[3]))
-            log_all.flush()
+                centers, widths, quaternions = get7dofPoses(pred_pairs, pred_offset, pred_angle, scale=radius)
+                time_list.append(time.time() - st)
+                z = centers[:, 2]
+                select = torch.nonzero((widths < 0.085)*(z>0)).view(-1)
+                if select.size(0) == 0:
+                    continue
+                centers, widths, quaternions = centers[select], widths[select], quaternions[select]
+                select_pred_pairs = pred_pairs[select]
+                posi_scores = posi_scores[select]
+                prop_score = prop_score[select]
+                pred_angle = pred_angle[select].view(-1)
 
-    print(max(time_list), min(time_list), np.mean(time_list))
-    log.write('min time%f\n'%(min(time_list)))
-    log.write('max time%f\n'%(max(time_list)))
-    log.write('mean time%f\n'%(np.mean(time_list)))
-    log.write(str(time_list)+'\n')
+                posi_contacts = select_pred_pairs[:, 0]
+                posi_contacts_cpu = posi_contacts.cpu().numpy()
+                posi_scores_cpu = posi_scores.cpu().numpy()
+                centers = centers.cpu().numpy()
+                widths = widths.cpu().numpy()
+                quaternions = quaternions.cpu().numpy()
+                prop_score_cpu = prop_score.cpu().numpy()
+                pred_angle_cpu = pred_angle.cpu().numpy()
+                assert pred_angle_cpu.shape[0] == centers.shape[0]
+                assert posi_contacts_cpu.shape[0] == centers.shape[0]
+                print('posi grasp num:', posi_scores.size(0))
+                centers = zMove(quaternions, centers, zMoveLength=0.015)
+
+                all_grasps_path = os.path.join(all_grasps_dir, shape+'.npz')
+                np.savez(all_grasps_path, widths=widths, centers=centers, quaternions=quaternions, 
+                    scores=posi_scores_cpu, contacts=posi_contacts_cpu, angles=pred_angle_cpu)
+
+                st = time.time()
+                keep = nms2(centers, quaternions, posi_scores_cpu, cent_th=0.04, ang_th=np.pi/3)
+                keep = np.array(keep, dtype=np.int32)
+                print('nms time: ', time.time() - st)
+                centers = centers[keep]
+                widths = widths[keep]
+                quaternions = quaternions[keep]
+                
+                log_all.write(shape + '\n')
+                for i in range(centers.shape[0]):
+                    w = widths[i]
+                    c = centers[i]
+                    q = quaternions[i]
+                    log_all.write('%f,%f,%f,%f,%f,%f,%f\n'%(c[0], c[1], c[2], q[0], q[1], q[2], q[3]))
+                log_all.flush()
+
+        print(max(time_list), min(time_list), np.mean(time_list))
+        log.write('min time%f\n'%(min(time_list)))
+        log.write('max time%f\n'%(max(time_list)))
+        log.write('mean time%f\n'%(np.mean(time_list)))
+        log.write(str(time_list)+'\n')
 
 
 def get7dofPoses(pairs, offsets, angles, scale=0.022*np.sqrt(3)):
